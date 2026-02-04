@@ -88,7 +88,7 @@ local function create_99_state()
 end
 
 --- @class _99.Completion
---- @field source "cmp" | nil
+--- @field source "cmp" | "blink" | nil
 --- @field custom_rules string[]
 
 --- @class _99.Options
@@ -441,7 +441,10 @@ end
 function _99.setup(opts)
   opts = opts or {}
 
-  assert(opts.model, "you must specify a model to use 99. Please look at the README.md at github.com/theprimeagen/99 to see how `setup` is called.")
+  assert(
+    opts.model,
+    "you must specify a model to use 99. Please look at the README.md at github.com/theprimeagen/99 to see how `setup` is called."
+  )
 
   _99_state = _99_State.new()
   _99_state.provider_override = opts.provider

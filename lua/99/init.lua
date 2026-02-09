@@ -487,7 +487,7 @@ local function show_in_flight_requests()
         table.insert(lines, r.name)
       end
 
-      Window.vertical_resize(win, #lines)
+      Window.resize(win, #lines[1], #lines)
       vim.api.nvim_buf_set_lines(win.buf_id, 0, 1, false, lines)
     end)
     _99_state.show_in_flight_requests_window = win

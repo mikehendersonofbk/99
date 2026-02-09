@@ -33,8 +33,8 @@ local function ease_in_ease_out_cubic(percent)
   end
 end
 
-local throb_time = 1000
-local cooldown_time = 500
+local throb_time = 1200
+local cooldown_time = 200
 
 --- @class _99.Throbber
 --- @field start_time number
@@ -58,7 +58,6 @@ function Throbber.new(cb)
 end
 
 function Throbber:_run()
-    print("throbbing", self.state)
   if self.state ~= "throbbing" and self.state ~= "cooldown" then
     return
   end
@@ -74,7 +73,6 @@ function Throbber:_run()
   end
 
   self.cb(icon)
-    print("throbbing", self.state, icon)
   vim.defer_fn(function()
     self:_run()
   end, 75)

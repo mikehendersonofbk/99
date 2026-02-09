@@ -441,13 +441,15 @@ function M.status_window()
 end
 
 --- @param win _99.window.Window
+--- @param width number
 --- @param height number
-function M.vertical_resize(win, height)
+function M.resize(win, width, height)
   if win.config.height == height then
     return
   end
   assert(M.is_active_window(win), "you cannot pass in an inactive window")
   win.config.height = height
+  win.config.width = width
   vim.api.nvim_win_set_config(win.win_id, full_config(win.config))
 end
 

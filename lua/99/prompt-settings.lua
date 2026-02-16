@@ -24,6 +24,7 @@ Once you have fetched all the relavent content, review it thoroughly before
 crafting the tutorial
 
 <Rule>The response format must be valid Markdown</Rule>
+<Rule>The first line of the response must be the title of the tutorial</Rule>
 ]]
   end,
   semantic_search = function()

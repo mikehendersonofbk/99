@@ -80,8 +80,7 @@ end
 --- @param r _99.Request
 --- @param obs _99.Providers.Observer | nil
 local function observer_from_request(r, obs)
-
-    local context = r.context
+  local context = r.context
   return {
     on_start = function()
       r.state = "requesting"
@@ -116,12 +115,14 @@ function Request:start(observer)
     self.state == "ready",
     "request is not in state ready when attempting to start a request"
   )
-  self.context:finalize()
+  local ok = self.context:finalize()
+  self.logger:assert(ok, "request has failed due to context finalization: check logs for more details")
+
   for _, content in ipairs(self.context.ai_context) do
     self:add_prompt_content(content)
   end
-
   local prompt = table.concat(self._content, "\n")
+
   self.context:save_prompt(prompt)
   self.logger:debug("start", "prompt", prompt)
   self.provider:make_request(

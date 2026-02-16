@@ -1,10 +1,36 @@
 local Request = require("99.request")
 local CleanUp = require("99.ops.clean-up")
+local Window = require("99.window")
 local make_prompt = require("99.ops.make-prompt")
 
 local make_clean_up = CleanUp.make_clean_up
 local make_observer = CleanUp.make_observer
---- @class _99.Tutorial.Result
+
+--- @class _99.RequestEntry.Data.Tutorial
+--- @field type "tutorial"
+--- @field buffer number
+--- @field window number
+--- @field xid number
+--- @field tutorial string[]
+
+--- @param context _99.RequestContext
+---@param response string
+---@return _99.RequestEntry.Data.Tutorial
+local function open_tutorial(context, response)
+  local content = vim.split(response, "\n")
+  local win = Window.create_split(content)
+
+  --- @type _99.RequestEntry.Data.Tutorial
+  local data = {
+    type = "tutorial",
+    buffer = win.buffer,
+    window = win.win,
+    xid = context.xid,
+    tutorial = content,
+  }
+  context._99:add_data(context, data)
+  return data
+end
 
 --- @param context _99.RequestContext
 ---@param opts _99.ops.Opts
@@ -22,6 +48,7 @@ local function tutorial(context, opts)
 
   local prompt, refs =
     make_prompt(context, context._99.prompts.prompts.tutorial(), opts)
+
   context:add_references(refs)
   request:add_prompt_content(prompt)
   context:add_clean_up(clean_up)
@@ -37,9 +64,9 @@ local function tutorial(context, opts)
         response or "no response provided"
       )
     elseif status == "success" then
-      error("what the hell")
+      local data = open_tutorial(context, response)
+      context._99:open_tutorial(data)
     end
   end))
-
 end
 return tutorial

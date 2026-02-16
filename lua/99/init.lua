@@ -43,18 +43,13 @@ end
 
 --- @alias _99.Cleanup fun(): nil
 
---- @class _99.RequestEntry.Data.Tutorial
---- @field type "tutorial"
---- @field title string
---- @field content string[]
-
 --- @class _99.RequestEntry.Data.Search
 --- @field type "search"
 
 --- @class _99.RequestEntry.Data.Visual
 --- @field type "visual"
 
----
+-- luacheck: ignore
 --- @alias _99.RequestEntry.Data _99.RequestEntry.Data.Search | _99.RequestEntry.Data.Tutorial | _99.RequestEntry.Data.Visual
 
 --- @class _99.RequestEntry
@@ -75,8 +70,6 @@ end
 --- @field auto_add_skills boolean
 --- @field provider_override _99.Providers.BaseProvider?
 --- @field __view_log_idx number
---- @field __tutorials _99.RequestEntry.Data.Tutorial[]
---- @field __searches _99.RequestEntry.Data.Search[]
 --- @field __request_history _99.RequestEntry[]
 --- @field __request_by_id table<number, _99.RequestEntry>
 
@@ -92,8 +85,6 @@ local function create_99_state()
     display_errors = false,
     provider_override = nil,
     auto_add_skills = false,
-    __tutorials = {},
-    __searches = {},
     __view_log_idx = 1,
     __request_history = {},
     __request_by_id = {},
@@ -134,8 +125,6 @@ end
 --- @field rules _99.Agents.Rules
 --- @field __view_log_idx number
 --- @field __request_history _99.RequestEntry[]
---- @field __tutorials _99.RequestEntry.Data.Tutorial[]
---- @field __searches _99.RequestEntry.Data.Search[]
 --- @field __request_by_id table<number, _99.RequestEntry>
 --- @field __active_marks _99.Mark[]
 local _99_State = {}
@@ -161,6 +150,9 @@ function _99_State:refresh_rules()
   self.rules = Agents.rules(self)
   Extensions.refresh(self)
 end
+
+--- @param tutorial _99.RequestEntry.Data.Tutorial
+function _99_State:open_tutorial(tutorial) end
 
 --- @param context _99.RequestContext
 --- @return _99.RequestEntry
@@ -193,19 +185,12 @@ function _99_State:finish_request(context, status)
   end
 
   entry.status = status
-  local data = entry.operation_data
-  if entry.status == "success" and data then
-    if data.type == "tutorial" then
-      table.insert(self.__tutorials, data)
-    elseif data.type == "search" then
-      table.insert(self.__searches, data)
-    end
-  end
 end
 
---- @param id number
+--- @param context _99.RequestContext
 ---@param data _99.RequestEntry.Data
-function _99_State:add_data(id, data)
+function _99_State:add_data(context, data)
+  local id = context.xid
   local entry = self.__request_by_id[id]
   if not entry then
     return
@@ -239,8 +224,6 @@ function _99_State:clear_previous_requests()
     end
   end
   self.__request_history = keep
-  self.__searches = {}
-  self.__tutorials = {}
 end
 
 --- @param mark _99.Mark
@@ -256,6 +239,19 @@ function _99_State:active_request_count()
     end
   end
   return count
+end
+
+--- @param type "search" | "visual" | "tutorial"
+--- @return _99.RequestEntry.Data
+function _99_State:get_request_data_by_type(type)
+  local out = {}
+  for _, r in ipairs(self.__request_history) do
+    local data = r.operation_data
+    if data and data.type == type then
+      table.insert(out, data)
+    end
+  end
+  return out
 end
 
 local _99_state = _99_State.new()
@@ -282,8 +278,11 @@ end
 --- @param name string
 --- @param context _99.RequestContext
 --- @param opts _99.ops.Opts
-local function capture_prompt(cb, name, context, opts)
+--- @param capture_content string[] | nil
+local function capture_prompt(cb, name, context, opts, capture_content)
   Window.capture_input(name, {
+    content = capture_content,
+
     --- @param ok boolean
     --- @param response string
     cb = function(ok, response)
@@ -338,6 +337,56 @@ function _99.info()
     table.insert(info, string.format("* %s", rule.name))
   end
   Window.display_centered_message(info)
+end
+
+--- @param tutorials _99.RequestEntry.Data.Tutorial[]
+--- @return string[]
+local function tutorial_to_string(tutorials)
+  local out = {}
+  for _, t in ipairs(tutorials) do
+    table.insert(out, string.format("%d: %s", t.xid, t.tutorial[1]))
+  end
+  return out
+end
+
+--- @param xid number | nil
+--- @param opts? _99.window.SplitWindowOpts
+function _99.open_tutorial(xid, opts)
+  opts = opts or { split_direction = "vertical" }
+  if xid == nil then
+    local tutorials = _99_state:get_request_data_by_type("tutorial")
+    if #tutorials == 0 then
+      print("no tutorials available")
+    elseif #tutorials == 1 then
+      local data = tutorials[1].operation_data
+      assert(data, "tutorial is malformed")
+      Window.create_split(data.tutorial, data.buffer, opts)
+    else
+      local context = get_context("tutorial-lookup")
+      capture_prompt(function(_, o)
+        local response = o.additional_prompt
+        local lines = vim.split(response, "\n")
+        for _, l in ipairs(lines) do
+          local id = tonumber(vim.split(l, ":")[1])
+          if not id then
+            error(
+              "do not alter the tutoria lines, just delete the ones you dont want"
+            )
+          end
+          local tut = _99_state.__request_by_id[id]
+          local data = tut and tut.operation_data
+          assert(data and data.type == "tutorial", "invalid tutorial selected")
+          Window.create_split(data.tutorial, data.buffer, opts)
+        end
+      end, "Select Tutorial", context, {}, tutorial_to_string(tutorials))
+    end
+    return
+  end
+
+  local tutorial = _99_state.__request_by_id[xid]
+  local data = tutorial and tutorial.operation_data
+  assert(data and data.type == "tutorial", "cannot open a non tutorial")
+  Window.create_split(data.tutorial, data.buffer, opts)
 end
 
 --- @param path string

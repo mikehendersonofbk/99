@@ -112,8 +112,9 @@ function RequestContext:content()
   return self.ai_context
 end
 
---- @param prompt string
-function RequestContext:save_prompt(prompt)
+--- @return boolean
+function RequestContext:_ready_request_files()
+  local response_file = self.tmp_file
   local prompt_file = self.tmp_file .. "-prompt"
 
   local dir = vim.fs.dirname(prompt_file)
@@ -122,6 +123,23 @@ function RequestContext:save_prompt(prompt)
     pcall(vim.uv.fs_mkdir, dir, 493)
   end
 
+  local files = { prompt_file, response_file }
+  for _, f in ipairs(files) do
+    local file = io.open(f, "w")
+    if file then
+      file:write("")
+      file:close()
+    else
+      self.logger:error("unable to create prompt file")
+      return false
+    end
+  end
+  return true
+end
+
+--- @param prompt string
+function RequestContext:save_prompt(prompt)
+  local prompt_file = self.tmp_file .. "-prompt"
   local file = io.open(prompt_file, "w")
   if file then
     file:write(prompt)
@@ -132,8 +150,11 @@ function RequestContext:save_prompt(prompt)
   end
 end
 
---- @return self
+--- @return boolean, self
 function RequestContext:finalize()
+  if self:_ready_request_files() == false then
+    return false, self
+  end
   self:_read_md_files()
   if self.range then
     table.insert(self.ai_context, self._99.prompts.get_file_location(self))
@@ -143,7 +164,7 @@ function RequestContext:finalize()
     self.ai_context,
     self._99.prompts.tmp_file_location(self.tmp_file)
   )
-  return self
+  return true, self
 end
 
 function RequestContext:clear_marks()

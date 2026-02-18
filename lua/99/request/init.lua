@@ -116,7 +116,10 @@ function Request:start(observer)
     "request is not in state ready when attempting to start a request"
   )
   local ok = self.context:finalize()
-  self.logger:assert(ok, "request has failed due to context finalization: check logs for more details")
+  self.logger:assert(
+    ok,
+    "request has failed due to context finalization: check logs for more details"
+  )
 
   for _, content in ipairs(self.context.ai_context) do
     self:add_prompt_content(content)

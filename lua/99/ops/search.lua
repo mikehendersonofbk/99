@@ -75,7 +75,6 @@ local function search(context, opts)
   local prompt, refs =
     make_prompt(context, context._99.prompts.prompts.semantic_search(), opts)
 
-
   request:add_prompt_content(prompt)
   context:add_references(refs)
   context:add_clean_up(clean_up)

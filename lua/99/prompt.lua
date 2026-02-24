@@ -53,6 +53,7 @@ local filetype_map = {
 --- @class _99.Prompt
 --- @field md_file_names string[]
 --- @field model string
+--- @field user_prompt string
 --- @field operation _99.Prompt.Operation
 --- @field state _99.Prompt.State
 --- @field full_path string
@@ -84,6 +85,7 @@ local function set_defaults(context, _99)
 
   context.state = "ready"
   context._99 = _99
+  context.user_prompt = ""
   context.clean_ups = {}
   context.md_file_names = copy(_99.md_files)
   context.model = _99.model
@@ -151,6 +153,11 @@ function Prompt.visual(_99)
   context.logger:debug("99 Request", "method", "visual")
 
   return context
+end
+
+--- @return string
+function Prompt:summary()
+  return string.format("%s: %s", self.operation, self.user_prompt)
 end
 
 --- @param _99 _99.State

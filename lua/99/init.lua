@@ -186,6 +186,8 @@ local _99_state
 --- @field search fun(opts: _99.ops.SearchOpts): _99.TraceID
 --- Performs a search across your project with the prompt you provide and return out a list of
 --- locations with notes that will be put into your quick fix list.
+--- @field vibe_search fun(opts?: _99.ops.Opts): _99.TraceID | nil
+--- Select a previous search, edit it, then pass it to vibe.
 --- @field visual fun(opts: _99.ops.Opts): _99.TraceID
 --- takes your current selection and sends that along with the prompt provided and replaces
 --- your visual selection with the results
@@ -235,6 +237,7 @@ local function capture_prompt(cb, name, context, opts, capture_content)
         table.insert(opts.additional_rules, r)
       end
       opts.additional_prompt = response
+      context.user_prompt = response
       cb(context, opts)
     end,
     on_load = function()
@@ -277,7 +280,7 @@ function _99.open_tutorial(xid, opts)
   opts = opts or { split_direction = "vertical" }
   if xid == nil then
     --- @type _99.Prompt.Data.Tutorial[]
-    local tutorials = _99_state:get_request_data_by_type("tutorial")
+    local tutorials = _99_state:request_by_type("tutorial")
     if #tutorials == 0 then
       print("no tutorials available")
       return
@@ -319,6 +322,7 @@ function _99.vibe(opts)
   local o = process_opts(opts)
   local context = Prompt.vibe(_99_state)
   if o.additional_prompt then
+    context.user_prompt = o.additional_prompt
     ops.vibe(context, o)
   else
     capture_prompt(ops.vibe, "Vibe", context, o)
@@ -332,11 +336,59 @@ function _99.search(opts)
   local o = process_opts(opts) --[[ @as _99.ops.SearchOpts ]]
   local context = Prompt.search(_99_state)
   if o.additional_prompt then
+    context.user_prompt = o.additional_prompt
     ops.search(context, o)
   else
     capture_prompt(ops.search, "Search", context, o)
   end
   return context.xid
+end
+
+--- @param opts? _99.ops.Opts
+--- @return _99.TraceID | nil
+function _99.vibe_search(opts)
+  local searches = _99_state:request_by_type("search")
+  if #searches == 0 then
+    error("no previous search results")
+    return nil
+  end
+
+  local o = process_opts(opts)
+  local lines = {}
+  for i, context in ipairs(searches) do
+    table.insert(
+      lines,
+      string.format("%d: %s", i, context:summary())
+    )
+  end
+
+  Window.capture_select_input("Select Search", {
+    content = lines,
+    cb = function(ok, result)
+      if not ok then
+        return
+      end
+
+      local idx = tonumber(string.match(result, "^(%d+)%:"))
+      local selected = idx and searches[idx] or nil
+      if not selected then
+        print("failed to select search result")
+        return
+      end
+
+      local selected_data = selected:search_data()
+      local context = Prompt.vibe(_99_state)
+      capture_prompt(
+        ops.vibe,
+        "Vibe",
+        context,
+        o,
+        vim.split(selected_data.response, "\n")
+      )
+    end,
+  })
+
+  return nil
 end
 
 --- @param opts _99.ops.Opts
@@ -356,6 +408,7 @@ function _99.visual(opts)
   opts = process_opts(opts)
   local context = Prompt.visual(_99_state)
   if opts.additional_prompt then
+    context.user_prompt = opts.additional_prompt
     ops.over_range(context, opts)
   else
     capture_prompt(ops.over_range, "Visual", context, opts)
@@ -416,13 +469,14 @@ function _99.clear_all_marks()
   _99_state.__active_marks = {}
 end
 
---- @param xid number | nil
+--- @param xid number
 function _99.qfix(xid)
   --- @type _99.Prompt
   local entry = _99_state.__request_by_id[xid]
   assert(entry, "qfix_search_results could not find id: " .. xid)
 
   local items = entry:qfix_data()
+  Logger:set_id(xid):debug("qfix items retrieved", "items", items)
   vim.fn.setqflist({}, "r", { title = "99 Results", items = items })
   vim.cmd("copen")
 end

@@ -151,13 +151,12 @@ function State:active_request_count()
 end
 
 --- @param type "search" | "visual" | "tutorial"
---- @return _99.Prompt.Data
-function State:get_request_data_by_type(type)
-  local out = {}
+--- @return _99.Prompt[]
+function State:request_by_type(type)
+  local out = {} --[[ @as _99.Prompt[] ]]
   for _, r in ipairs(self.__request_history) do
-    local data = r.data
-    if data and data.type == type then
-      table.insert(out, data)
+    if r.operation == type then
+      table.insert(out, r)
     end
   end
   return out

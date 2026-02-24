@@ -445,6 +445,46 @@ function M.capture_input(name, opts)
       ensure_no_new_lines(opts.content)
     )
   end
+
+  return win
+end
+
+--- @param name string
+--- @param opts _99.window.CaptureInputOpts
+function M.capture_select_input(name, opts)
+  local win
+  win = M.capture_input(name, {
+    content = opts.content,
+    rules = opts.rules,
+    cb = function(success, result)
+      if not success then
+        opts.cb(false, result)
+      end
+    end,
+    on_load = function()
+      vim.bo[win.buf_id].modifiable = false
+      vim.bo[win.buf_id].readonly = true
+      if opts.on_load then
+        opts.on_load()
+      end
+    end,
+  })
+
+  vim.keymap.set("n", "<CR>", function()
+    if not nvim_win_is_valid(win.win_id) then
+      return
+    end
+
+    local cursor = vim.api.nvim_win_get_cursor(win.win_id)
+    local line = vim.api.nvim_buf_get_lines(
+      win.buf_id,
+      cursor[1] - 1,
+      cursor[1],
+      false
+    )[1] or ""
+    M.clear_active_popups()
+    opts.cb(true, line)
+  end, { buffer = win.buf_id, nowait = true })
 end
 
 function M.clear_active_popups()

@@ -4,9 +4,10 @@ local eq = assert.are.same
 local create_entries = QFixHelpers.create_qfix_entries
 
 describe("qfix helpers", function()
-  it("parse_line parses filename, line, column, and notes", function()
-    local parsed =
-      QFixHelpers.parse_line("lua/99/ops/search.lua:42:7,found semantic search")
+  it("parse_line parses filename, line, column, range, and notes", function()
+    local parsed = QFixHelpers.parse_line(
+      "lua/99/ops/search.lua:42:7,3,found semantic search"
+    )
 
     eq({
       filename = "lua/99/ops/search.lua",
@@ -17,8 +18,9 @@ describe("qfix helpers", function()
   end)
 
   it("parse_line keeps commas in notes text", function()
-    local parsed = QFixHelpers.parse_line("file.lua:10:3,note,with,commas")
+    local parsed = QFixHelpers.parse_line("file.lua:10:3,1,note,with,commas")
 
+    assert(parsed)
     eq("file.lua", parsed.filename)
     eq(10, parsed.lnum)
     eq(3, parsed.col)
@@ -28,30 +30,25 @@ describe("qfix helpers", function()
   it("parse_line returns nil for malformed lines", function()
     eq(nil, QFixHelpers.parse_line("file.lua:10"))
     eq(nil, QFixHelpers.parse_line("file.lua:10:3:extra"))
+    eq(nil, QFixHelpers.parse_line("file.lua:10:3"))
   end)
 
-  it(
-    "parse_line uses defaults for invalid numbers and missing notes",
-    function()
-      local parsed = QFixHelpers.parse_line("file.lua:notnum:notcol")
+  it("parse_line keeps colons in notes text", function()
+    local parsed =
+      QFixHelpers.parse_line("file.lua:10:3,2,check this: important section")
 
-      eq({
-        filename = "file.lua",
-        lnum = 1,
-        col = 1,
-        text = "",
-      }, parsed)
-    end
-  )
+    assert(parsed)
+    eq("check this: important section", parsed.text)
+  end)
 
   it(
     "create_qfix_entries parses valid lines and skips malformed ones",
     function()
       local response = table.concat({
-        "a.lua:1:2,first hit",
+        "a.lua:1:2,4,first hit",
         "not a valid line",
-        "b.lua:3:4",
-        "c.lua:notnum:notcol,fallback values",
+        "b.lua:3:4,1,",
+        "c.lua:5:7,2,fallback values",
         "",
       }, "\n")
 
@@ -72,8 +69,8 @@ describe("qfix helpers", function()
         },
         {
           filename = "c.lua",
-          lnum = 1,
-          col = 1,
+          lnum = 5,
+          col = 7,
           text = "fallback values",
         },
       }, locations)

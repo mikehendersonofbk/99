@@ -30,7 +30,7 @@ end
 --- @field text string
 
 --- @param context _99.Prompt
----@param opts _99.ops.SearchOpts
+---@param opts _99.ops.Opts
 local function vibe(context, opts)
   opts = opts or {}
 

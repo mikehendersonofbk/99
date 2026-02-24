@@ -2,25 +2,23 @@ local M = {}
 
 --- @return _99.Search.Result | nil
 function M.parse_line(line)
-  local parts = vim.split(line, ":", { plain = true })
-  if #parts ~= 3 then
+  local filepath, lnum_raw, rest = line:match("^(.-):([^:]+):(.+)$")
+  if not filepath or not lnum_raw or not rest then
     return nil
   end
 
-  local filepath = parts[1]
-  local lnum = parts[2]
-  local comma_parts = vim.split(parts[3], ",", { plain = true })
-  local col = comma_parts[1]
-  local notes = nil
-
-  if #comma_parts >= 2 then
-    notes = table.concat(comma_parts, ",", 2)
+  local col_raw, _, notes = rest:match("^([^,]+),([^,]+),?(.*)$")
+  if not col_raw then
+    return nil
   end
+
+  local lnum = tonumber(lnum_raw) or 1
+  local col = tonumber(col_raw) or 1
 
   return {
     filename = filepath,
-    lnum = tonumber(lnum) or 1,
-    col = tonumber(col) or 1,
+    lnum = lnum,
+    col = col,
     text = notes or "",
   }
 end

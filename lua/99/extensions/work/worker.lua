@@ -14,7 +14,7 @@ local utils = require("99.utils")
 --- @field set_work fun(opts?: _99.WorkOpts): nil
 --- will set the work for the project.  If opts provide a description then no
 --- input capture of work description will be required
---- @field work fun(): nil
+--- @field search fun(): nil
 --- will use _99.search to find what is left to be done for this work item to be
 --- considered done
 local M = {}
@@ -141,7 +141,7 @@ and how to fix them
   )
 end
 
-function M.work()
+function M.search()
   local _99 = require("99")
   hydrate_current_work_item()
 

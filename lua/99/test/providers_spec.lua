@@ -87,6 +87,28 @@ describe("providers", function()
     end)
   end)
 
+  describe("CodexProvider", function()
+    it("builds correct command with model", function()
+      local request = { model = "gpt-5-codex", tmp_file = "/tmp/99-output" }
+      local cmd =
+        Providers.CodexProvider._build_command(nil, "test query", request)
+      eq({
+        "codex",
+        "exec",
+        "--model",
+        "gpt-5-codex",
+        "--output-last-message",
+        "/tmp/99-output",
+        "--full-auto",
+        "test query",
+      }, cmd)
+    end)
+
+    it("has correct default model", function()
+      eq("gpt-5-codex", Providers.CodexProvider._get_default_model())
+    end)
+  end)
+
   describe("provider integration", function()
     it("can be set as provider override", function()
       local _99 = require("99")
@@ -140,6 +162,17 @@ describe("providers", function()
       end
     )
 
+    it(
+      "uses CodexProvider default model when provider specified but no model",
+      function()
+        local _99 = require("99")
+
+        _99.setup({ provider = Providers.CodexProvider })
+        local state = _99.__get_state()
+        eq("gpt-5-codex", state.model)
+      end
+    )
+
     it("uses custom model when both provider and model specified", function()
       local _99 = require("99")
 
@@ -158,6 +191,7 @@ describe("providers", function()
       eq("function", type(Providers.ClaudeCodeProvider.make_request))
       eq("function", type(Providers.CursorAgentProvider.make_request))
       eq("function", type(Providers.GeminiCLIProvider.make_request))
+      eq("function", type(Providers.CodexProvider.make_request))
     end)
   end)
 end)

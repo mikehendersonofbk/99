@@ -1,0 +1,6 @@
+/home/mike/Documents/projects/99/lua/99/extensions/work/worker.lua:1:1,24,Implementation of the Worker extension which provides a persistent way to track and search for project work
+/home/mike/Documents/projects/99/lua/99/extensions/work/worker.lua:79:1,20,The set_work function allows users to define the current work description
+/home/mike/Documents/projects/99/lua/99/extensions/work/worker.lua:108:1,36,The craft_prompt function defines the specialized search prompt used to identify remaining tasks
+/home/mike/Documents/projects/99/lua/99/extensions/work/worker.lua:146:1,13,The search function triggers an agentic search based on the active work item
+/home/mike/Documents/projects/99/lua/99/init.lua:560:5,4,Initialization of the Worker extension within the main 99 API
+/home/mike/Documents/projects/99/lua/99/test/worker_spec.lua:1:1,60,Test suite for validating Worker functionality including work setting and persistence

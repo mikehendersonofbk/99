@@ -15,7 +15,7 @@ end
 --- @field read_tmp fun(): string
 local prompts = {
   role = function()
-    return [[ You are a software engineering assistant mean to create robust and conanical code ]]
+    return [[ You are a senior software engineering assistant.  Always provide a detailed thought process and plan before executing any code changes. ]]
   end,
   tutorial = function()
     return [[

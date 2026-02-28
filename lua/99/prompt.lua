@@ -67,6 +67,7 @@ local filetype_map = {
 --- @field xid number
 --- @field clean_ups (fun(): nil)[]
 --- @field _99 _99.State
+--- @field thought string?
 ---@diagnostic disable-next-line: undefined-doc-name
 --- @field _proc vim.SystemObj?
 local Prompt = {}
@@ -225,6 +226,12 @@ function Prompt:_observer(obs)
       end
     end,
     on_stdout = function(line)
+      for _, l in ipairs(vim.split(line, "\n", { trimempty = true })) do
+        local ok, json = pcall(vim.json.decode, l)
+        if ok and json and json.thought then
+          self.thought = json.thought
+        end
+      end
       if obs then
         obs.on_stdout(line)
       end

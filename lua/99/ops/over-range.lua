@@ -35,10 +35,10 @@ local function over_range(context, opts)
   local top_status = RequestStatus.new(
     250,
     context._99.ai_stdout_rows or 1,
-    "Implementing",
+    "Thinking...",
     top_mark
   )
-  local bottom_status = RequestStatus.new(250, 1, "Implementing", bottom_mark)
+  local bottom_status = RequestStatus.new(250, 1, "Thinking...", bottom_mark)
   local clean_up = make_clean_up(function()
     top_status:stop()
     bottom_status:stop()
@@ -92,9 +92,22 @@ local function over_range(context, opts)
         new_range:replace_text(lines)
       end
     end,
-    on_stdout = function(line)
+    on_stdout = function(data)
       if display_ai_status then
-        top_status:push(line)
+        for _, line in ipairs(vim.split(data, "\n", { trimempty = true })) do
+          local ok, json = pcall(vim.json.decode, line)
+          if ok and json then
+            if json.thought then
+              top_status.status_line.title_line = json.thought
+              bottom_status.status_line.title_line = json.thought
+              context.thought = json.thought
+            elseif json.text then
+              top_status:push(json.text)
+            end
+          elseif not ok then
+            top_status:push(line)
+          end
+        end
       end
     end,
   }))

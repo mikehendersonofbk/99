@@ -96,7 +96,11 @@ local function show_in_flight_requests(_99, opts)
 
       for _, c in pairs(_99.__request_by_id) do
         if c.state == "requesting" then
-          table.insert(lines, c.operation)
+          local line = c.operation
+          if c.thought then
+            line = line .. ": " .. c.thought
+          end
+          table.insert(lines, line)
         end
       end
 

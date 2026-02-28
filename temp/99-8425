@@ -1,0 +1,12 @@
+/home/mike/Documents/projects/99/README.md:152:5,1,Extensions table entry in documentation
+/home/mike/Documents/projects/99/README.md:189:6,1,Extensions section header in README
+/home/mike/Documents/projects/99/lua/99/state.lua:1:31,1,Loading agents extension in state module
+/home/mike/Documents/projects/99/lua/99/state.lua:2:31,1,Loading main extensions module in state
+/home/mike/Documents/projects/99/lua/99/extensions/init.lua:1:22,1,Importing files extension in extension init
+/home/mike/Documents/projects/99/lua/99/extensions/init.lua:3:15,1,Defining Extensions Source class
+/home/mike/Documents/projects/99/lua/99/init.lua:12:25,1,Loading extensions in core init file
+/home/mike/Documents/projects/99/lua/99/init.lua:561:5,4,Initialization of the Extensions table including the Worker
+/home/mike/Documents/projects/99/lua/99/extensions/fzf_lua.lua:26:34,1,Error message when fzf-lua extension is missing
+/home/mike/Documents/projects/99/lua/99/extensions/telescope.lua:22:38,1,Error message when telescope extension is missing
+/home/mike/Documents/projects/99/lua/99/extensions/cmp.lua:128:15,1,Type definition for Extensions Source in cmp integration
+/home/mike/Documents/projects/99/lua/99/test/files_spec.lua:159:49,1,Test case for extension handling in completion provider

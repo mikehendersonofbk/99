@@ -13,8 +13,7 @@ local function finish_chat(context, response)
     response = response,
     qfix_items = {},
   }
-  Window.create_split(vim.split(response, "
-"), nil, { filetype = "markdown" })
+  Window.create_split(vim.split(response, ""), nil, { filetype = "markdown" })
 end
 
 --- @param context _99.Prompt

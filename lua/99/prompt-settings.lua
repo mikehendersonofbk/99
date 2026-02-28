@@ -9,6 +9,7 @@ end
 --- @field visual_selection fun(range: _99.Range): string
 --- @field semantic_search fun(): string
 --- @field vibe fun(): string
+--- @field chat fun(): string
 --- @field tutorial fun(): string
 --- @field prompt fun(prompt: string, action: string, name?: string): string
 --- @field role fun(): string
@@ -16,6 +17,12 @@ end
 local prompts = {
   role = function()
     return [[ You are a senior software engineering assistant.  Always provide a detailed thought process and plan before executing any code changes. ]]
+  end,
+  chat = function()
+    return [[
+You are a software engineering assistant. You are given a prompt and the context of the current file you are in.
+Answer the user's questions or help them with their tasks.
+]]
   end,
   tutorial = function()
     return [[
@@ -200,6 +207,17 @@ local prompt_settings = {
   --- @param range _99.Range
   get_range_text = function(range)
     return string.format("<FunctionText>%s</FunctionText>", range:to_text())
+  end,
+
+  ---@param full_path string
+  ---@return string
+  get_full_file_contents = function(full_path)
+    local lines = vim.fn.readfile(full_path)
+    return string.format(
+      "<CurrentFile path=\"%s\">\n%s\n</CurrentFile>",
+      full_path,
+      table.concat(lines, "\n")
+    )
   end,
 }
 

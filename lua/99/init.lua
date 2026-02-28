@@ -198,6 +198,9 @@ local _99_state
 --- @field visual fun(opts: _99.ops.Opts): _99.TraceID
 --- takes your current selection and sends that along with the prompt provided and replaces
 --- your visual selection with the results
+--- @field chat fun(opts: _99.ops.Opts): _99.TraceID
+--- opens a prompt and sends the current file context as well as the prompt provided
+--- and return out a result in a split window
 --- @field view_logs fun(): nil
 --- views the most recent logs and setups the machine to view older and new logs
 --- this is still pretty rough and will change in the near future
@@ -364,6 +367,20 @@ function _99.tutorial(opts)
   else
     capture_prompt(ops.tutorial, "Tutorial", context, opts)
   end
+end
+
+--- @param opts _99.ops.Opts?
+--- @return _99.TraceID
+function _99.chat(opts)
+  local o = process_opts(opts)
+  local context = Prompt.chat(_99_state)
+  if o.additional_prompt then
+    context.user_prompt = o.additional_prompt
+    ops.chat(context, o)
+  else
+    capture_prompt(ops.chat, "Chat", context, o)
+  end
+  return context.xid
 end
 
 --- @param opts _99.ops.Opts?

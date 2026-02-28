@@ -36,4 +36,5 @@ return {
   tutorial = require("99.ops.tutorial"),
   over_range = require("99.ops.over-range"),
   vibe = require("99.ops.vibe"),
+  chat = require("99.ops.chat"),
 }

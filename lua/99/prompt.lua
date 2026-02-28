@@ -22,7 +22,7 @@ local filetype_map = {
 
 -- luacheck: ignore
 --- @alias _99.Prompt.Data _99.Prompt.Data.Search | _99.Prompt.Data.Tutorial | _99.Prompt.Data.Visual | _99.Prompt.Data.Vibe
---- @alias _99.Prompt.Operation "visual" | "tutorial" | "search" | "vibe"
+--- @alias _99.Prompt.Operation "visual" | "tutorial" | "search" | "vibe" | "chat"
 --- @alias _99.Prompt.QFixOperation "search" | "vibe"
 --- @alias _99.Prompt.EndingState "failed" | "success" | "cancelled"
 --- @alias _99.Prompt.State "ready" | "requesting" | _99.Prompt.EndingState
@@ -203,6 +203,25 @@ function Prompt.search(_99)
   return context
 end
 
+--- @param _99 _99.State
+--- @return _99.Prompt
+function Prompt.chat(_99)
+  _99:refresh_rules()
+
+  --- @type _99.Prompt
+  local context = setmetatable({}, Prompt)
+  set_defaults(context, _99)
+  context.operation = "chat"
+  context.data = {
+    type = "vibe", -- Reuse vibe data type as it just needs response
+    response = "",
+    qfix_items = {},
+  }
+  context.logger:debug("99 Request", "method", "chat")
+
+  return context
+end
+
 --- @param obs _99.Providers.Observer | nil
 function Prompt:_observer(obs)
   return {
@@ -244,6 +263,7 @@ local allowed_context_types = {
   "search",
   "tutorial",
   "vibe",
+  "chat",
 }
 --- @return boolean
 function Prompt:valid()
@@ -471,6 +491,11 @@ function Prompt:finalize()
     self.agent_context,
     self._99.prompts.tmp_file_location(self.tmp_file)
   )
+
+  if self.operation == "chat" then
+    local content = self._99.prompts.get_full_file_contents(self.full_path)
+    table.insert(self.agent_context, content)
+  end
 
   if
     self.operation == "visual"

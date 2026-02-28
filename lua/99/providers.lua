@@ -339,6 +339,8 @@ function GeminiCLIProvider._build_command(_, query, context)
     context.model,
     "--prompt",
     query,
+    "--output-format",
+    "stream-json",
   }
 end
 
